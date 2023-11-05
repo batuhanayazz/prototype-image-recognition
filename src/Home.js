@@ -31,6 +31,8 @@ const Home = () => {
     init();
   }, []);
 
+  /// NEED prediction function
+
   // Expo Cam
   const capturePhoto = async () => {
     if (cam.current) {
@@ -174,6 +176,45 @@ const Home = () => {
             </View>
           )}
         </View>
+        <ScrollView style={tailwind("flex h-2/6 px-4 py-2")}>
+          <View
+            style={tailwind("flex flex-row items-center justify-center pb-4")}
+          >
+            <View style={tailwind("flex flex-row")}>
+              <Text style={tailwind(`${textColor} font-bold text-xs`)}>
+                Status:{" "}
+              </Text>
+              <Text style={tailwind(`${textColor} text-xs`)}>{status}</Text>
+            </View>
+          </View>
+
+          <View style={tailwind(`flex flex-row py-2 rounded`)}>
+            <Text
+              style={tailwind(
+                `flex w-1/2 text-center border-r border-gray-400 font-bold ${textColor}`
+              )}
+            >
+              Object Name
+            </Text>
+            <Text
+              style={tailwind(`flex w-1/2 text-center font-bold ${textColor}`)}
+            >
+              Probability
+            </Text>
+          </View>
+
+          {results.map(({ className, probability }, idx) => (
+            <ResultItem
+              key={`result-${idx}`}
+              name={className}
+              probability={probability}
+              color={bgAccent}
+              textColor={textAccent}
+            />
+          ))}
+
+          <View style={tailwind("flex h-6")} />
+        </ScrollView>
       </View>
     </View>
   );

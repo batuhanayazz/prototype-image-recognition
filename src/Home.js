@@ -2,16 +2,31 @@ import { View, Image, Text, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState, useEffect, useRef, useContext } from "react";
 import tailwind from "tailwind-rn";
 import Svg, { Path } from "react-native-svg";
+import { WIDTH } from "./constants";
+import { Camera } from "expo-camera";
 
 const Home = () => {
   // COMPONENT VARIABLES
+  const [photo, setPhoto] = useState();
   const [isDark, setIsDark] = useState(false);
   // CAMERA VARIABLES
+  const cam = useRef();
+  const [type, setType] = useState(Camera.Constants.Type.back);
+  const [camPermitted, setCamPermitted] = useState(null);
   // LIGHT & DARK MODE VARIABLES
   const bgColor = isDark ? " bg-gray-800 " : " bg-gray-100 ";
   const bgAccent = isDark ? " bg-gray-700 " : " bg-gray-300 ";
   const textColor = isDark ? " text-gray-100 " : " text-gray-800 ";
   const textAccent = isDark ? "text-gray-300" : "text-gray-700";
+  // CAMERA FUNCTIONS
+  useEffect(() => {
+    const init = async () => {
+      const { status } = await Camera.requestPermissionsAsync();
+      setCamPermitted(status === "granted");
+    };
+    init();
+  }, []);
+
   return (
     <View style={tailwind(`flex flex-1 ${bgColor}`)}>
       <View
@@ -49,6 +64,37 @@ const Home = () => {
             </Svg>
           </TouchableOpacity>
         )}
+      </View>
+      <View style={tailwind("flex flex-1")}>
+        <View style={[tailwind("flex p-2"), { width: WIDTH, height: WIDTH }]}>
+          {photo ? (
+            <Image
+              style={tailwind(
+                `${bgAccent} flex justify-center flex-1 rounded-xl`
+              )}
+              source={{ uri: photo.uri }}
+            />
+          ) : (
+            <View
+              style={tailwind(
+                `${bgAccent} flex flex-1 justify-center overflow-hidden rounded-xl`
+              )}
+            >
+              {camPermitted ? (
+                <Camera
+                  ref={(ref) => (cam.current = ref)}
+                  style={tailwind(`absolute inset-0`)}
+                  type={type}
+                  ratio="1:1"
+                />
+              ) : (
+                <Text style={tailwind(`${textColor} text-center`)}>
+                  Accept Camera Permission to access
+                </Text>
+              )}
+            </View>
+          )}
+        </View>
       </View>
     </View>
   );

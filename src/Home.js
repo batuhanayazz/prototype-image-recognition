@@ -4,11 +4,15 @@ import tailwind from "tailwind-rn";
 import Svg, { Path } from "react-native-svg";
 import { WIDTH } from "./constants";
 import { Camera } from "expo-camera";
+import { DataContext } from "./DataContext";
 
 const Home = () => {
   // COMPONENT VARIABLES
   const [photo, setPhoto] = useState();
+  const [status, setStatus] = useState("Take a photo");
+  const [results, setResults] = useState([]);
   const [isDark, setIsDark] = useState(false);
+  const { model, loading } = useContext(DataContext);
   // CAMERA VARIABLES
   const cam = useRef();
   const [type, setType] = useState(Camera.Constants.Type.back);
@@ -21,11 +25,26 @@ const Home = () => {
   // CAMERA FUNCTIONS
   useEffect(() => {
     const init = async () => {
-      const { status } = await Camera.requestPermissionsAsync();
+      const { status } = await Camera.requestCameraPermissionsAsync();
       setCamPermitted(status === "granted");
     };
     init();
   }, []);
+
+  // Expo Cam
+  const capturePhoto = async () => {
+    if (cam.current) {
+      const options = {
+        quality: 1,
+        base64: true,
+        skipProcessing: true,
+        onPictureSaved: async (res) => {
+          setPhoto(res);
+        },
+      };
+      await cam.current.takePictureAsync(options);
+    }
+  };
 
   return (
     <View style={tailwind(`flex flex-1 ${bgColor}`)}>
@@ -92,6 +111,66 @@ const Home = () => {
                   Accept Camera Permission to access
                 </Text>
               )}
+            </View>
+          )}
+
+          {!loading && (
+            <View
+              style={tailwind(
+                "absolute bottom-4 inset-x-4 flex flex-row items-center justify-center"
+              )}
+            >
+              <TouchableOpacity
+                activeOpacity={0.7}
+                style={[
+                  { backgroundColor: "rgba(16,185,129,0.5)" },
+                  tailwind("rounded-full p-3"),
+                ]}
+                onPress={() => {
+                  if (photo) {
+                    setPhoto(null);
+                    setResults([]);
+                  } else capturePhoto();
+                }}
+              >
+                {photo ? (
+                  <Svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    style={tailwind("h-10 w-10 text-white")}
+                  >
+                    <Path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                    />
+                  </Svg>
+                ) : (
+                  <Svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    style={tailwind("h-10 w-10 text-white")}
+                  >
+                    <Path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                    />
+                    <Path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </Svg>
+                )}
+              </TouchableOpacity>
             </View>
           )}
         </View>

@@ -1,9 +1,13 @@
-import { View, Image, Text, TouchableOpacity, ScrollView } from "react-native";
 import React, { useState, useEffect, useRef, useContext } from "react";
+import { View, Image, Text, TouchableOpacity, ScrollView } from "react-native";
 import tailwind from "tailwind-rn";
 import Svg, { Path } from "react-native-svg";
-import { WIDTH } from "./constants";
+import * as ImageManipulator from "expo-image-manipulator";
+import * as FileSystem from "expo-file-system";
+import * as tf from "@tensorflow/tfjs";
+import { decodeJpeg } from "@tensorflow/tfjs-react-native";
 import { Camera } from "expo-camera";
+import { WIDTH } from "./constants";
 import { DataContext } from "./DataContext";
 
 const Home = () => {
@@ -31,7 +35,44 @@ const Home = () => {
     init();
   }, []);
 
-  /// NEED prediction function
+  useEffect(() => {
+    if (photo) {
+      const predict = async () => {
+        setStatus(() => "Initializing...");
+        setResults([]);
+        const prediction = await getPrediction(photo);
+        setResults(prediction);
+        setStatus(() => "Finished.");
+      };
+
+      predict();
+    } else {
+      setStatus("Take a photo");
+    }
+  }, [photo]);
+
+  const getPrediction = async (photo) => {
+    try {
+      if (!loading) {
+        setStatus(() => "Resizing photo...");
+        const { uri } = await resizePhoto(photo.uri, [244, 244]);
+
+        setStatus(() => "Converting to tensor3D...");
+        const imgB64 = await FileSystem.readAsStringAsync(uri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        const imgBuffer = tf.util.encodeString(imgB64, "base64").buffer;
+        const raw = new Uint8Array(imgBuffer);
+        const tensor = decodeJpeg(raw);
+
+        setStatus(() => "Classifying...");
+        const prediction = await model.classify(tensor);
+        return prediction;
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   // Expo Cam
   const capturePhoto = async () => {
@@ -47,6 +88,20 @@ const Home = () => {
       await cam.current.takePictureAsync(options);
     }
   };
+  // Resize photo
+  // This function takes a photo and resizes it to a given size.
+  const resizePhoto = async (uri, size) => {
+    const actions = [{ resize: { width: size[0], height: size[1] } }];
+    const saveOptions = {
+      base64: true,
+      format: ImageManipulator.SaveFormat.JPEG,
+    };
+    return await ImageManipulator.manipulateAsync(uri, actions, saveOptions);
+  };
+  /// Need function to show results
+  function ResultItem() {
+    return <View></View>;
+  }
 
   return (
     <View style={tailwind(`flex flex-1 ${bgColor}`)}>

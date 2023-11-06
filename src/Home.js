@@ -98,9 +98,27 @@ const Home = () => {
     };
     return await ImageManipulator.manipulateAsync(uri, actions, saveOptions);
   };
-  /// Need function to show results
-  function ResultItem() {
-    return <View></View>;
+
+  ///Function to show results
+  function ResultItem({ name, probability, color = "bg-gray-300", textColor }) {
+    return (
+      <View
+        style={tailwind(
+          `flex flex-row ${color} py-2 rounded mt-2 items-center justify-center`
+        )}
+      >
+        <Text
+          style={tailwind(
+            `${textColor} px-2 flex w-1/2 text-center border-r border-gray-400`
+          )}
+        >
+          {name}
+        </Text>
+        <Text style={tailwind(`${textColor} px-2 flex w-1/2 text-center`)}>{`${(
+          probability * 100
+        ).toFixed(2)}%`}</Text>
+      </View>
+    );
   }
 
   return (
